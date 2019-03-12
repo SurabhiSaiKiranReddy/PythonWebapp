@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Profile</h1>
+  {% from "includes/_formhelpers.html" import render_field %}
+  <form action="" method="POST">
+    <div class="form-group">
+        {{render_field(form.fullname, class_="form-control")}}
+    </div>
+    <div class="form-group">
+        {{render_field(form.address1, class_="form-control")}}
+    </div>
+    <div class="form-group">
+        {{render_field(form.address2, class_="form-control")}}
+    </div>
+    <div class="form-group">
+        {{render_field(form.city, class_="form-control")}}
+    </div>
+    <div class="form-group">
+        {{render_field(form.state, class_="form-control")}}
+    </div>
+    <div class="form-group">
+        {{render_field(form.zipcode, class_="form-control")}}
+    </div>
+   
+    <button type="submit" class="btn btn-primary" value="submit">Submit</button>
+  </form>
+{% endblock %}

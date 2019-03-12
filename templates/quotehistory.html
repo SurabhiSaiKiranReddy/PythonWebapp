@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+<h1>Quote History</h1>
+<table style="width:100%">
+       
+        <tr>
+        {% for key, value in data[1].iteritems() %}
+        
+              <th> {{ key }} </th>
+              
+              {% endfor %}
+            </tr>
+              {% for row in data %}
+              <tr>
+              {% for key, value in row.iteritems() %}
+              
+              <td> {{ value }} </td>
+              
+              
+        {% endfor %}
+    </tr>
+     
+        {% endfor %}
+</table>
+
+{% endblock %}
