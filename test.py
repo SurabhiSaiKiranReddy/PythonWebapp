@@ -10,7 +10,7 @@ from wtforms.fields.html5 import DateField
 from flask_table import Table, Col
 
 app = Flask(__name__)
-
+activeid=0
 # Config MySQL
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
@@ -39,7 +39,9 @@ class ProfileForm(Form):
 def profile():
     form = ProfileForm(request.form)
     if request.method == 'POST' and form.validate():
-       
+        global activeid
+        pid=activeid
+        print(pid)
         fullname = form.fullname.data
        
         
@@ -52,7 +54,7 @@ def profile():
         cur = mysql.connection.cursor()
 
         # Execute query
-        cur.execute("INSERT INTO profile(fullname, address1,address2,city,state,zipcode) VALUES(%s, %s,%s,%s,%s,%s)", (fullname,address1,address2,city,state,zipcode))
+        cur.execute("INSERT INTO profile(pid,fullname, address1,address2,city,state,zipcode) VALUES(%s,%s, %s,%s,%s,%s,%s)", (pid,fullname,address1,address2,city,state,zipcode))
 
         # Commit to DB
         mysql.connection.commit()
@@ -69,7 +71,7 @@ def profile():
 class QuoteForm(Form):
   
     gallons = StringField('gallons', [validators.DataRequired(),validators.Length(max=50)])
-    deliveryaddress = TextAreaField("deliveryaddress",[validators.DataRequired(),validators.Length(max=100)])
+  
     deliverydate = DateField('deliverydate', format='%Y-%m-%d')
     price= DecimalField('price', [validators.DataRequired()])
     totalamount= DecimalField('amount', [validators.DataRequired()])
@@ -77,22 +79,29 @@ class QuoteForm(Form):
 
 @app.route('/quote', methods=['GET', 'POST'])
 def quote():
+    global activeid
     form = QuoteForm(request.form)
     if request.method == 'POST' and form.validate():
-       
+        cur = mysql.connection.cursor()
         gallons = form.gallons.data
-       
-        
-        deliveryaddress= form.deliveryaddress.data
+        cur.execute("select * from profile where pid=%s",[activeid])
+        data1 = cur.fetchone()
+        # address1= data['address1']
+        # address2=data['address2']
+        print(data1)
+        # deliveryaddress=address1+address2
+        # print(deli)
+        quoteid=activeid
+        # deliveryaddress= form.deliveryaddress.data
         deliverydate= form.deliverydate.data
         price= form.price.data
         totalamount= form.totalamount.data
         
         # Create cursor
-        cur = mysql.connection.cursor()
+  
 
         # Execute query
-        cur.execute("INSERT INTO quote(gallons, deliveryaddress,deliverydate,price,totalamount) VALUES(%s, %s,%s,%s,%s)", (gallons,deliveryaddress,deliverydate,price,totalamount))
+        cur.execute("INSERT INTO quote( quoteid,gallons, deliverydate,price,totalamount) VALUES(%s, %s,%s,%s,%s)", (quoteid,gallons,deliverydate,price,totalamount))
 
         # Commit to DB
         mysql.connection.commit()
@@ -103,8 +112,8 @@ def quote():
         flash('Your order is placed ', 'success')
 
         # return render_template('register.html')
-        redirect(url_for('index'))
-    return render_template('quote.html', form=form)
+        redirect(url_for('dashboard'))
+    return render_template('quote.html', result=data1,form=form)
 
 # Register Form Class
 class RegisterForm(Form):
@@ -132,13 +141,14 @@ def register():
 
         # Execute query
         try:
-            cur.execute("INSERT INTO register(username, password, isfirstlogin) VALUES(%s, %s,y)", (username, password))
+            cur.execute("INSERT INTO register(username, password, isfirstlogin) VALUES(%s, %s,%s)", (username, password,'y'))
+            mysql.connection.commit()
         except:
             error = 'username already exists'
             return render_template('register.html', error=error,form=form)
 
         # Commit to DB
-        mysql.connection.commit()
+        
 
         # Close connection
         cur.close()
@@ -156,6 +166,7 @@ def dashboard():
 # User login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    global activeid
     if request.method == 'POST':
         # Get Form Fields
         username = request.form['username']
@@ -185,10 +196,18 @@ def login():
                     no="n"
                     cur.execute("UPDATE register set isfirstlogin = %s WHERE username=%s",(no,username))
                     mysql.connection.commit()
+                    
+                    cur.execute("SELECT id FROM register WHERE username = %s", [username])
+                    userid=cur.fetchone()
+                    activeid=userid['id']
+
                     cur.close()
                     flash('You are now logged in.Please complete your profile', 'success')
                     return redirect(url_for('profile'))
                 else:
+                    userid = cur.execute("SELECT id FROM register WHERE username = %s", [username])
+                    userid=cur.fetchone()
+                    activeid=userid['id']
                     flash('You are now logged in', 'success')
                     return redirect(url_for('dashboard'))
             else:
@@ -209,10 +228,10 @@ def quote_history():
        
     cur = mysql.connection.cursor()
         
-    cur.execute("SELECT gallons,price,deliveryaddress,deliverydate,totalamount FROM quote")
+    cur.execute("SELECT * FROM quote")
 
     data = cur.fetchall()
-    print(data)
+    
 
     mysql.connection.commit()
     cur.close()    

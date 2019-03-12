@@ -3,13 +3,22 @@
 {% block body %}
   <h1>Quote Form</h1>
   {% from "includes/_formhelpers.html" import render_field %}
+  <table>
+        {% for key, value in result.items() %}
+           <tr>
+              <th> {{ key }} </th>
+              <td> {{ value }} </td>
+           </tr>
+        {% endfor %}
+     </table>
   <form action="" method="POST">
     <div class="form-group">
         {{render_field(form.gallons, class_="form-control")}}
     </div>
-    <div class="form-group">
-        {{render_field(form.deliveryaddress, class_="form-control")}}
-    </div>
+    <!-- <div class="form-group">
+      {{deliveryaddress}}
+    </div> -->
+    
     <div class="form-group">
         {{render_field(form.deliverydate, class_="form-control")}}
     </div>
