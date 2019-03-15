@@ -19,7 +19,7 @@ app.config['MYSQL_DB'] = 'webapp'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 # init MYSQL
 mysql = MySQL(app)
-
+deladdress=''
 
 @app.route('/index')
 def index():
@@ -73,8 +73,8 @@ class QuoteForm(Form):
     gallons = StringField('gallons', [validators.DataRequired(),validators.Length(max=50)])
   
     deliverydate = DateField('deliverydate', format='%Y-%m-%d')
-    price= DecimalField('price', [validators.DataRequired()])
-    totalamount= DecimalField('amount', [validators.DataRequired()])
+    # price= DecimalField('price', [validators.DataRequired()])
+    # totalamount= DecimalField('amount', [validators.DataRequired()])
    
 
 @app.route('/quote', methods=['GET', 'POST'])
@@ -84,24 +84,23 @@ def quote():
     if request.method == 'POST' and form.validate():
         cur = mysql.connection.cursor()
         gallons = form.gallons.data
-        cur.execute("select * from profile where pid=%s",[activeid])
-        data1 = cur.fetchone()
-        # address1= data['address1']
-        # address2=data['address2']
-        print(data1)
-        # deliveryaddress=address1+address2
-        # print(deli)
+        
         quoteid=activeid
-        # deliveryaddress= form.deliveryaddress.data
+        global deladdress
+        cur.execute("SELECT * FROM profile WHERE pid = %s", [activeid])
+        data = cur.fetchone()
+        add1 = data['address1']
+        add2=data['address2']
+        deladdress= add1+add2
         deliverydate= form.deliverydate.data
-        price= form.price.data
-        totalamount= form.totalamount.data
+        # price= form.price.data
+        # totalamount= form.totalamount.data
         
         # Create cursor
   
 
         # Execute query
-        cur.execute("INSERT INTO quote( quoteid,gallons, deliverydate,price,totalamount) VALUES(%s, %s,%s,%s,%s)", (quoteid,gallons,deliverydate,price,totalamount))
+        cur.execute("INSERT INTO quote( quoteid,gallons, deliverydate,price,totalamount) VALUES(%s, %s,%s,%s,%s)", (quoteid,gallons,deliverydate,'34','34'))
 
         # Commit to DB
         mysql.connection.commit()
@@ -113,8 +112,17 @@ def quote():
 
         # return render_template('register.html')
         redirect(url_for('dashboard'))
-    return render_template('quote.html', result=data1,form=form)
+    return render_template('quote.html', form=form,result=deladdress)
 
+    # cur = mysql.connection.cursor()
+    # cur.execute("select * from profile where pid=%s",[activeid])
+    # data = cur.fetchone()
+    #     # address1= data['address1']
+    #     # address2=data['address2']
+    # cur.close()
+    #     # deliveryaddress=address1+address2
+    #     # print(deli)
+    # return render_template('quote.html', result=data)
 # Register Form Class
 class RegisterForm(Form):
   
