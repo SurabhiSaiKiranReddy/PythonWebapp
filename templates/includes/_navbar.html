@@ -1,3 +1,4 @@
+
 <nav class="navbar navbar-default">
     <div class="container">
       <div class="navbar-header">
@@ -18,9 +19,9 @@
 
         <ul class="nav navbar-nav navbar-right">
           {% if session.logged_in %}
-            <li><a href="/dash">My profile</a></li>
-            <li><a href="/logout">order fuel</a></li>
-            <li><a href="/quote">orders</a></li>
+            <li><a href="/myprofile">My profile</a></li>
+            <li><a href="/quote">order fuel</a></li>
+            <li><a href="/quote_history">orders</a></li>
             <li><a href="/logout">logout</a></li>
           {% else %}
             <li><a href="/register">Register</a></li>

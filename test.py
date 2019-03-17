@@ -20,6 +20,7 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 # init MYSQL
 mysql = MySQL(app)
 deladdress=''
+price=''
 
 @app.route('/index')
 def index():
@@ -55,7 +56,10 @@ def profile():
 
         # Execute query
         cur.execute("INSERT INTO profile(pid,fullname, address1,address2,city,state,zipcode) VALUES(%s,%s, %s,%s,%s,%s,%s)", (pid,fullname,address1,address2,city,state,zipcode))
-
+        
+        # cur.execute("select * from register where id=%s",activeid)
+        no="n"
+        cur.execute("UPDATE register set isfirstlogin = %s WHERE id=%s",(no,pid))
         # Commit to DB
         mysql.connection.commit()
 
@@ -87,11 +91,16 @@ def quote():
         
         quoteid=activeid
         global deladdress
+        global price
+        deladdress=''
+        price=''
         cur.execute("SELECT * FROM profile WHERE pid = %s", [activeid])
         data = cur.fetchone()
         add1 = data['address1']
         add2=data['address2']
         deladdress= add1+add2
+        
+        price=str(10)
         deliverydate= form.deliverydate.data
         # price= form.price.data
         # totalamount= form.totalamount.data
@@ -100,7 +109,7 @@ def quote():
   
 
         # Execute query
-        cur.execute("INSERT INTO quote( quoteid,gallons, deliverydate,price,totalamount) VALUES(%s, %s,%s,%s,%s)", (quoteid,gallons,deliverydate,'34','34'))
+        cur.execute("INSERT INTO quote( quoteid,gallons, deliverydate) VALUES(%s, %s,%s)", (quoteid,gallons,deliverydate))
 
         # Commit to DB
         mysql.connection.commit()
@@ -111,8 +120,9 @@ def quote():
         flash('Your order is placed ', 'success')
 
         # return render_template('register.html')
-        redirect(url_for('dashboard'))
-    return render_template('quote.html', form=form,result=deladdress)
+        
+        return render_template('quote.html', form=form,result=deladdress,price=price)
+    return render_template('quote.html',form=form,result=deladdress)
 
     # cur = mysql.connection.cursor()
     # cur.execute("select * from profile where pid=%s",[activeid])
@@ -201,7 +211,7 @@ def login():
                 session['logged_in'] = True
                 session['username'] = username
                 if firstlogin=="y":
-                    no="n"
+                    no="y"
                     cur.execute("UPDATE register set isfirstlogin = %s WHERE username=%s",(no,username))
                     mysql.connection.commit()
                     
@@ -248,8 +258,7 @@ def quote_history():
   
 
     return render_template("quotehistory.html", data=data)
-           
-    
+ 
 
 # Check if user logged in
 def is_logged_in(f):
@@ -261,9 +270,34 @@ def is_logged_in(f):
             flash('Unauthorized, Please login', 'danger')
             return redirect(url_for('login'))
     return wrap
+           
+@app.route('/logout')
+@is_logged_in
+def logout():
+    session.clear()
+    flash('You are now logged out', 'success')
+    return redirect(url_for('login'))  
 
+@app.route('/myprofile', methods=['GET', 'POST'])
+def myprofile():
+   
+        # Get Form Fields
+       
+    cur = mysql.connection.cursor()
+        
+    cur.execute("SELECT * FROM profile where pid=%s",[activeid])
 
+    data = cur.fetchall()
+    
+    print(data)
+    mysql.connection.commit()
+    cur.close()    
+    
+   
+  
 
+    return render_template("myprofile.html", data=data)
+           
 
 
 
