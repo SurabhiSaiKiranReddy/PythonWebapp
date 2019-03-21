@@ -22,9 +22,7 @@ mysql = MySQL(app)
 deladdress=''
 price=''
 
-@app.route('/index')
-def index():
-    return render_template('index.html')
+
 
 class ProfileForm(Form):
   
@@ -74,7 +72,7 @@ def profile():
 
 class QuoteForm(Form):
   
-    gallons = StringField('gallons', [validators.DataRequired(),validators.Length(max=50)])
+    gallons = StringField('gallons', [validators.DataRequired(),validators.Length(min=1,max=50)])
   
     deliverydate = DateField('deliverydate', format='%Y-%m-%d')
     # price= DecimalField('price', [validators.DataRequired()])
@@ -84,14 +82,15 @@ class QuoteForm(Form):
 @app.route('/quote', methods=['GET', 'POST'])
 def quote():
     global activeid
+    global deladdress
+    global price
     form = QuoteForm(request.form)
-    if request.method == 'POST' and form.validate():
+    if request.method == 'POST' and form.validate() and request.form['submit button']=='place order':
         cur = mysql.connection.cursor()
         gallons = form.gallons.data
         
         quoteid=activeid
-        global deladdress
-        global price
+        
         deladdress=''
         price=''
         cur.execute("SELECT * FROM profile WHERE pid = %s", [activeid])
@@ -122,7 +121,45 @@ def quote():
         # return render_template('register.html')
         
         return render_template('quote.html', form=form,result=deladdress,price=price)
+    
+    if request.method == 'POST' and form.validate() and request.form['submit button']=='get price':
+        cur = mysql.connection.cursor()
+        gallons = form.gallons.data
+        
+        quoteid=activeid
+        
+       
+        deladdress=''
+        price=''
+        cur.execute("SELECT * FROM profile WHERE pid = %s", [activeid])
+        data = cur.fetchone()
+        add1 = data['address1']
+        add2=data['address2']
+        deladdress= add1+add2
+        
+        price=str(10)
+        deliverydate= form.deliverydate.data
+        # price= form.price.data
+        # totalamount= form.totalamount.data
+        
+        # Create cursor
+  
+
+        # Execute query
+        
+        # Commit to DB
+        mysql.connection.commit()
+
+        # Close connection
+        cur.close()
+
+      
+
+        # return render_template('register.html')
+        
+        return render_template('quote.html', form=form,result=deladdress,price=price)
     return render_template('quote.html',form=form,result=deladdress)
+
 
     # cur = mysql.connection.cursor()
     # cur.execute("select * from profile where pid=%s",[activeid])
@@ -191,7 +228,11 @@ def login():
         password_candidate = request.form['password']
         cur = mysql.connection.cursor()
         
-      
+        if username=="admin" and password_candidate=="admin":
+            session['admin_logged_in'] = True
+            session['username'] = username
+            session['logged_in'] = False
+            return redirect(url_for('dashboard'))
         # Create cursor
        
 
@@ -242,25 +283,46 @@ def login():
 @app.route('/quote_history', methods=['GET', 'POST'])
 def quote_history():
    
+    global activeid
         # Get Form Fields
        
     cur = mysql.connection.cursor()
-        
-    cur.execute("SELECT * FROM quote")
+    val=1
 
+    x=cur.execute("SELECT deliverydate,gallons FROM quote where quoteid=%s",[activeid])
     data = cur.fetchall()
+        
+    if(x==0):
+        return render_template("quotehistory.html",val=0)
+   
+    mysql.connection.commit()
+   
     
 
-    mysql.connection.commit()
+  
     cur.close()    
     
    
   
 
     return render_template("quotehistory.html", data=data)
- 
+ # Check if user logged in
+def is_admin_logged_in(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'admin_logged_in' in session:
+            return f(*args, **kwargs)
+        else:
+            flash('Not the admin, Please login', 'danger')
+            return redirect(url_for('login'))
+    return wrap
+           
 
 # Check if user logged in
+
+
+
+
 def is_logged_in(f):
     @wraps(f)
     def wrap(*args, **kwargs):
@@ -300,7 +362,27 @@ def myprofile():
            
 
 
+#admin
 
+@app.route('/admin_customerorders', methods=['GET', 'POST'])
+def admincustomerorders():
+
+        # Get Form Fields
+       
+    cur = mysql.connection.cursor()
+        
+    cur.execute("SELECT deliverydate,gallons FROM quote")
+
+    data = cur.fetchall()
+    
+
+    mysql.connection.commit()
+    cur.close()    
+    
+   
+  
+
+    return render_template("admincustomerorders.html", data=data)
 
 
 if __name__ == '__main__':

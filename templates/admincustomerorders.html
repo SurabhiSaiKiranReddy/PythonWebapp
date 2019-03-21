@@ -2,17 +2,11 @@
 
 {% block body %}
 
-<h1>Quote History</h1>
+<h1>Client Orders</h1>
 <table id="customers" style="width:100%">
        
-        
-          {% if val==0 %}
-          <h3>No Orders </h3>
-         
-          {% else %}
-          <tr>
+        <tr>
         {% for key, value in data[1].iteritems() %}
-        
         
               <th> <h3>{{ key }} </h3></th>
               
@@ -24,11 +18,11 @@
               
               <td> <h3>{{ value }}</h3> </td>
               
-              {% endfor %} 
+              
         {% endfor %}
     </tr>
-    {% endif %}  
-        
+     
+        {% endfor %}
 </table>
 
 {% endblock %}

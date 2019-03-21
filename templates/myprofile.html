@@ -3,19 +3,29 @@
 {% block body %}
 
 <h1>My Profile</h1>
-
+<table id="customers" style="width:100%">
        
 
-<ul>
-    {% for item in data %}
-      <li><h2>{{item['fullname']}} </h2></li>
-      <li><h2>{{item['address1']}} </h2></li>
-      <li><h2>{{item['address2']}} </h2></li>
-      <li><h2>{{item['city']}}</h2> </li>
-      <li><h2>{{item['state']}} </h2></li>
-      <li><h2>{{item['zipcode']}}</h2> </li>
-      {% endfor %}
-    </ul>
+      {% for item in data %}
+      
+     
+      <th> <li><h2>DETAILS </h2></li></th>
+      <tr><td> <li><h2>Fullname : {{item['fullname']}} </h2></li></td></tr>
+     <tr> <td> <li><h2>Address1 :{{item['address1']}} </h2></li></td></tr>
+      <tr> <td> <li><h2>Address2 :{{item['address2']}} </h2></li></td></tr>
+       <tr><td> <li><h2>City :{{item['city']}}</h2> </li></td></tr>
+      <tr> <td> <li><h2>State :{{item['state']}} </h2></li></td></tr>
+       <tr> <td><li><h2>Zipcode :{{item['zipcode']}}</h2> </li> </td></tr>
+      
+      
+{% endfor %}
+
+ 
+
+</table>
+       
+
+
  
 
  
