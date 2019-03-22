@@ -270,7 +270,7 @@ def login():
                     flash('You are now logged in', 'success')
                     return redirect(url_for('dashboard'))
             else:
-                error = 'Invalid login'
+                error = 'Password does not match'
                 return render_template('login.html', error=error)
             # Close connection
             cur.close()
@@ -312,9 +312,9 @@ def is_admin_logged_in(f):
     def wrap(*args, **kwargs):
         if 'admin_logged_in' in session:
             return f(*args, **kwargs)
-        else:
-            flash('Not the admin, Please login', 'danger')
-            return redirect(url_for('login'))
+        # else:
+        #     flash('Not the admin, Please login', 'danger')
+        #     return redirect(url_for('login'))
     return wrap
            
 
