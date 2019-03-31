@@ -72,7 +72,7 @@ def profile():
 
 class QuoteForm(Form):
   
-    gallons = StringField('gallons', [validators.DataRequired(),validators.Length(min=1,max=50)])
+    gallons = NumberField('gallons', [validators.DataRequired(),validators.Length(min=1,max=50)])
   
     deliverydate = DateField('deliverydate', format='%Y-%m-%d')
     # price= DecimalField('price', [validators.DataRequired()])
@@ -332,7 +332,11 @@ def is_logged_in(f):
             flash('Unauthorized, Please login', 'danger')
             return redirect(url_for('login'))
     return wrap
-           
+
+
+def pricing_module(factors):
+    return price
+
 @app.route('/logout')
 @is_logged_in
 def logout():
@@ -351,7 +355,7 @@ def myprofile():
 
     data = cur.fetchall()
     
-    print(data)
+    # print(data)
     mysql.connection.commit()
     cur.close()    
     

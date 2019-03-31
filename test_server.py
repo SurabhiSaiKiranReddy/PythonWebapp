@@ -1,15 +1,12 @@
 
-from test import app
+from server import app
 import unittest 
 from mock import Mock, patch
-from test import login
+from server import login
 
 
 
 class TestLoginMethods(unittest.TestCase):
-
-   
-
 
 
      def test_customerorders(self):
@@ -23,16 +20,6 @@ class TestLoginMethods(unittest.TestCase):
         self.assertTrue(b'deliverydate',  response.data)
 
     
-    
-
-
-
-
-
-
-
-
-
 
     # flask setup correctly
      def test_login(self):
@@ -80,26 +67,18 @@ class TestLoginMethods(unittest.TestCase):
             follow_redirects=True
         )
         self.assertIn(b'Username not found' , response.data)
-     def test_correct_login(self):
+
+      
+   
+     def test_profile_login(self):
         tester=app.test_client(self)
 
         response = tester.post(
             '/login',
-            data=dict(username="qwe", password="qwe"),
+            data=dict(username="test3", password="test3"),
             follow_redirects=True
         )
-        self.assertIn(b'You are now logged in' , response.data)
-      
-   # needed   
-   #   def test_profile_login(self):
-   #      tester=app.test_client(self)
-
-   #      response = tester.post(
-   #          '/login',
-   #          data=dict(username="ll", password="ll"),
-   #          follow_redirects=True
-   #      )
-   #      self.assertIn(b'You are now logged in.Please complete your profile' , response.data)
+        self.assertIn(b'You are now logged in.Please complete your profile' , response.data)
       
      def test_no_login(self):
         tester=app.test_client(self)
@@ -132,26 +111,7 @@ class TestLoginMethods(unittest.TestCase):
             follow_redirects=True
         )
         self.assertIn(b'Password does not match' , response.data)
-    #  def test_user_exists_indb(self):
-        
-    #     user = Mock()
 
-    #     # now set the attributes for the `user` object
-    #     user.username = "qwe"
-    #     user.password = "qwe"
-       
-    #     # now we pass the `user` object check for expected result `True`
-    #     result = login()
-    #     self.assertTrue(result)
-
-    
-    #  def not_a_db_hit():
-    #     print 'I did not hit the db'
-    #  @patch('test.connect_db')
-    #  def test_root(self, mock_connect_db):
-    #     mock_connect_db.side_effect = not_a_db_hit
-    #     response = app.test_client().get('/')
-    #     self.assertEqual(response.status_code, 200)
 
     # REGISTER
      def test_register(self):
@@ -164,30 +124,20 @@ class TestLoginMethods(unittest.TestCase):
 
         response = tester.get('/register', follow_redirects=True)
         self.assertTrue(b'Register',  response.data)
-   # needed
-   #   def test_correct_register(self):
+#    needed
+     def test_correct_register(self):
         
-   #      tester=app.test_client(self)
+        tester=app.test_client(self)
 
-   #      response = tester.post(
-   #          '/register',
-   #          data=dict(username="mll", password="mll",confirm="mll"),
-   #          follow_redirects=True
-   #      )
-   #      self.assertIn(b'You are now registered' , response.data)
+        response = tester.post(
+            '/register',
+            data=dict(username="test3", password="test3",confirm="test3"),
+            follow_redirects=True
+        )
+        self.assertIn(b'You are now registered' , response.data)
 
 
-   #    # /needed
-   #   def test_login_register(self):
-        
-   #      tester=app.test_client(self)
 
-   #      response = tester.post(
-   #          '/register',
-   #          data=dict(username="ll", password="ll",confirm="ll"),
-   #          follow_redirects=True
-   #      )
-   #      self.assertIn(b'You are now registered' , response.data)
      def test_incorrect_password(self):
         
         tester=app.test_client(self)
@@ -226,33 +176,7 @@ class TestLoginMethods(unittest.TestCase):
         pid=2 
         response = tester.get('/profile', content_type='html/text')
         self.assertEqual(2, pid)
-   #   def profile(): 
 
-   #    form = ProfileForm(request.form) 
-
-   #    if request.method == 'POST' and form.validate(): 
-
-   #       global activeid 
-
-   #       pid=activeid 
-
-   #       # print(pid) 
-
-   #       fullname = form.fullname.data 
-
-
-
-
-
-   #       address1= form.address1.data 
-
-   #       address2= form.address2.data 
-
-   #       city= form.city.data 
-
-   #       state= form.state.data 
-
-   #       zipcode= form.zipcode.data 
          
     # Ensure that posts show up on the main page
      def test_correct_profile(self):
@@ -310,7 +234,7 @@ class TestLoginMethods(unittest.TestCase):
         tester=app.test_client(self)  
         response = tester.get('/quote', follow_redirects=True)
         self.assertTrue(b'Quote',  response.data)
-#  8450 cambridge street #3241 scotland yard apartments8450 cambridge street #3241 scotland yard apartments   
+
      def test_address_quote(self):
         
          tester=app.test_client(self)
@@ -341,9 +265,17 @@ class TestLoginMethods(unittest.TestCase):
             follow_redirects=True
         )
         self.assertIn(b'Quote' , response.data)
+     def test_correct_login(self):
+        tester=app.test_client(self)
+
+        response = tester.post(
+            '/login',
+            data=dict(username="bun", password="bun"),
+            follow_redirects=True
+        )
+        self.assertIn(b'You are now logged in' , response.data)
    
-    
-   #   def tearDown(self):
+
         
     
 if __name__ == '__main__':
