@@ -1,5 +1,5 @@
 
-  
+from datetime import datetime  
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
 #from data import Articles
 from flask_mysqldb import MySQL
@@ -18,10 +18,46 @@ app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'webapp'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 # init MYSQL
+
 mysql = MySQL(app)
 deladdress=''
 price=''
 
+class ChangePrice(Form):
+  
+    price = StringField('price', [validators.Length(min=1, max=10)])
+   
+    
+    
+
+@app.route('/changeprice', methods=['GET', 'POST'])
+def changeprice():
+    form = ChangePrice(request.form)
+    if request.method == 'POST' and form.validate():
+       
+        price = form.price.data
+       
+        # Create cursor
+        cur = mysql.connection.cursor()
+
+        # Execute query
+        pri=float(price)
+        print(pri)
+        cur.execute("update price set price=%s where price_id=%s",(pri,'1'))
+        mysql.connection.commit()
+        
+
+        # Commit to DB
+        
+
+        # Close connection
+        cur.close()
+
+        flash('The price is updated', 'success')
+
+        # return render_template('register.html')
+        
+    return render_template('price.html', form=form)
 
 
 class ProfileForm(Form):
@@ -30,9 +66,9 @@ class ProfileForm(Form):
     address1 = TextAreaField("Address1",[validators.DataRequired(),validators.Length(max=100)])
     address2 = TextAreaField("Address2",[validators.Length(max=100)])
     city = StringField('city', [validators.DataRequired(),validators.Length(max=100)])
-    state = SelectField('State', choices = [('texas', 'TX'), 
-      ('california', 'CA')])
-    zipcode = StringField('zipcode', [validators.DataRequired(),validators.Length(min=5,max=9)])
+    state = SelectField('State', choices = [('select','select'),('TX', 'TX'), 
+      ('CA', 'CA')])
+    zipcode = IntegerField('zipcode', [validators.DataRequired(),validators.Length(min=5,max=9)])
 
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
@@ -42,7 +78,6 @@ def profile():
         pid=activeid
         print(pid)
         fullname = form.fullname.data
-       
         
         address1= form.address1.data
         address2= form.address2.data
@@ -72,11 +107,10 @@ def profile():
 
 class QuoteForm(Form):
   
-    gallons = NumberField('gallons', [validators.DataRequired(),validators.Length(min=1,max=50)])
+    gallons = IntegerField('gallons', [validators.DataRequired()],description='number required')
   
     deliverydate = DateField('deliverydate', format='%Y-%m-%d')
-    # price= DecimalField('price', [validators.DataRequired()])
-    # totalamount= DecimalField('amount', [validators.DataRequired()])
+   
    
 
 @app.route('/quote', methods=['GET', 'POST'])
@@ -119,12 +153,15 @@ def quote():
         flash('Your order is placed ', 'success')
 
         # return render_template('register.html')
+        # form.gallons.data=''
+        # form.deliverydate.data=''
         
-        return render_template('quote.html', form=form,result=deladdress,price=price)
+        return render_template('quote.html', form=form,result=deladdress)
     
     if request.method == 'POST' and form.validate() and request.form['submit button']=='get price':
         cur = mysql.connection.cursor()
         gallons = form.gallons.data
+        deliverydate= form.deliverydate.data
         
         quoteid=activeid
         
@@ -135,10 +172,43 @@ def quote():
         data = cur.fetchone()
         add1 = data['address1']
         add2=data['address2']
-        deladdress= add1+add2
+        cur.execute("SELECT state FROM profile WHERE pid = %s", [activeid])
+        loc = cur.fetchone()
         
-        price=str(10)
-        deliverydate= form.deliverydate.data
+        if loc['state']=="texas":
+            location=0.02
+        else:
+            location=0.04
+        print(location)
+        his=cur.execute("SELECT * FROM quote WHERE quoteid = %s", [activeid])
+        
+        if his>0:
+            rate_history_factor=0.01
+        else:
+            rate_history_factor=0
+        print(rate_history_factor)
+        if gallons>1000:
+            gallons_requested_factor=0.02
+        else:
+            gallons_requested_factor=0.03
+        print(deliverydate.month)
+        if (deliverydate.month)==6 or (deliverydate.month)==7 or (deliverydate.month)==8:
+            rate_fluctuation=0.04
+        else:
+            rate_fluctuation=0.03
+        print(rate_fluctuation)
+        # print(deliverydate.month)
+        deladdress= add1+add2
+        cur.execute("SELECT price FROM price where price_id=%s",('1'))
+        current= cur.fetchone()
+        current_price=current['price']
+        print(current_price)
+         
+        # current_price=1.50
+        margin=current_price*(location-rate_history_factor+gallons_requested_factor+0.01+rate_fluctuation)
+        price=current_price+margin
+        totalamount=float(gallons)*price
+        
         # price= form.price.data
         # totalamount= form.totalamount.data
         
@@ -157,7 +227,7 @@ def quote():
 
         # return render_template('register.html')
         
-        return render_template('quote.html', form=form,result=deladdress,price=price)
+        return render_template('quote.html', form=form,result=deladdress,price=price,amount=totalamount)
     return render_template('quote.html',form=form,result=deladdress)
 
 
@@ -222,6 +292,8 @@ def dashboard():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     global activeid
+    session['logged_in'] = False
+    session['admin_logged_in']=False
     if request.method == 'POST':
         # Get Form Fields
         username = request.form['username']

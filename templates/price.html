@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>UPDATE PRICE</h1>
+  {% from "includes/_formhelpers.html" import render_field %}
+  <form action="" method="POST">
+    <div class="form-group">
+      <h2>
+        {{render_field(form.price, class_="form-control")}}
+        </h2>
+    </div>
+    
+    <button type="submit" class="btn btn-primary" value="submit" style =" background-color: #b19a00;">Update price</button>
+  </form>
+{% endblock %}

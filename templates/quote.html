@@ -13,6 +13,9 @@
       <label><h2>gallons</h2></label>
       <input type="text" name="gallons" class="form-control" required value={{request.form.gallons}} >
     </div>
+    {% for message in form.gallons.errors %}
+         <div><h2>Number required<h2></div>
+      {% endfor %}
     <div class="form-group">
       <label><h2>deliverydate</h2></label>
       <input type="date" name="deliverydate" class="form-control" required value={{request.form.deliverydate}}>
@@ -21,7 +24,8 @@
   
     <button type="submit" style =" background-color: #b19a00;" name="submit button" class="btn btn-primary"value="get price">Get Price</button>
     <div class="container">
-      <h1>Price per gallon: {{ price }}</h1>
+      <h1>Price per gallon:$ {{ price }}</h1>
+      <h1>Total amount:$ {{ amount }}</h1>
       
   </div>
 
