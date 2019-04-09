@@ -25,7 +25,7 @@ price=''
 
 class ChangePrice(Form):
   
-    price = StringField('price', [validators.Length(min=1, max=10)])
+    price = DecimalField('price',places=2)
    
     
     
@@ -42,16 +42,13 @@ def changeprice():
 
         # Execute query
         pri=float(price)
-        print(pri)
         cur.execute("update price set price=%s where price_id=%s",(pri,'1'))
         mysql.connection.commit()
-        
-
         # Commit to DB
-        
-
         # Close connection
         cur.close()
+
+
 
         flash('The price is updated', 'success')
 
@@ -66,9 +63,9 @@ class ProfileForm(Form):
     address1 = TextAreaField("Address1",[validators.DataRequired(),validators.Length(max=100)])
     address2 = TextAreaField("Address2",[validators.Length(max=100)])
     city = StringField('city', [validators.DataRequired(),validators.Length(max=100)])
-    state = SelectField('State', choices = [('select','select'),('TX', 'TX'), 
+    state = SelectField(u'State', choices = [('TX', 'TX'), 
       ('CA', 'CA')])
-    zipcode = IntegerField('zipcode', [validators.DataRequired(),validators.Length(min=5,max=9)])
+    zipcode = IntegerField('zipcode', [validators.DataRequired(),validators.NumberRange(min=10000,max=999999999,message="zipcode should be 5 to 9 characters")])
 
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
@@ -86,16 +83,13 @@ def profile():
         zipcode= form.zipcode.data
         # Create cursor
         cur = mysql.connection.cursor()
-
         # Execute query
         cur.execute("INSERT INTO profile(pid,fullname, address1,address2,city,state,zipcode) VALUES(%s,%s, %s,%s,%s,%s,%s)", (pid,fullname,address1,address2,city,state,zipcode))
-        
         # cur.execute("select * from register where id=%s",activeid)
         no="n"
         cur.execute("UPDATE register set isfirstlogin = %s WHERE id=%s",(no,pid))
         # Commit to DB
         mysql.connection.commit()
-
         # Close connection
         cur.close()
 
@@ -131,25 +125,16 @@ def quote():
         data = cur.fetchone()
         add1 = data['address1']
         add2=data['address2']
-        deladdress= add1+add2
-        
+        deladdress= add1+add2        
         price=str(10)
-        deliverydate= form.deliverydate.data
-        # price= form.price.data
-        # totalamount= form.totalamount.data
-        
+        deliverydate= form.deliverydate.data        
         # Create cursor
-  
-
         # Execute query
         cur.execute("INSERT INTO quote( quoteid,gallons, deliverydate) VALUES(%s, %s,%s)", (quoteid,gallons,deliverydate))
-
         # Commit to DB
         mysql.connection.commit()
-
         # Close connection
         cur.close()
-
         flash('Your order is placed ', 'success')
 
         # return render_template('register.html')
@@ -161,11 +146,8 @@ def quote():
     if request.method == 'POST' and form.validate() and request.form['submit button']=='get price':
         cur = mysql.connection.cursor()
         gallons = form.gallons.data
-        deliverydate= form.deliverydate.data
-        
+        deliverydate= form.deliverydate.data        
         quoteid=activeid
-        
-       
         deladdress=''
         price=''
         cur.execute("SELECT * FROM profile WHERE pid = %s", [activeid])
@@ -173,15 +155,13 @@ def quote():
         add1 = data['address1']
         add2=data['address2']
         cur.execute("SELECT state FROM profile WHERE pid = %s", [activeid])
-        loc = cur.fetchone()
-        
+        loc = cur.fetchone()        
         if loc['state']=="texas":
             location=0.02
         else:
             location=0.04
         print(location)
-        his=cur.execute("SELECT * FROM quote WHERE quoteid = %s", [activeid])
-        
+        his=cur.execute("SELECT * FROM quote WHERE quoteid = %s", [activeid])        
         if his>0:
             rate_history_factor=0.01
         else:
@@ -202,31 +182,18 @@ def quote():
         cur.execute("SELECT price FROM price where price_id=%s",('1'))
         current= cur.fetchone()
         current_price=current['price']
-        print(current_price)
-         
+        print(current_price)       
         # current_price=1.50
         margin=current_price*(location-rate_history_factor+gallons_requested_factor+0.01+rate_fluctuation)
         price=current_price+margin
-        totalamount=float(gallons)*price
-        
-        # price= form.price.data
-        # totalamount= form.totalamount.data
-        
+        totalamount=float(gallons)*price               
         # Create cursor
-  
-
         # Execute query
-        
         # Commit to DB
         mysql.connection.commit()
-
         # Close connection
         cur.close()
-
-      
-
-        # return render_template('register.html')
-        
+        # return render_template('register.html')       
         return render_template('quote.html', form=form,result=deladdress,price=price,amount=totalamount)
     return render_template('quote.html',form=form,result=deladdress)
 
@@ -254,16 +221,11 @@ class RegisterForm(Form):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm(request.form)
-    if request.method == 'POST' and form.validate():
-       
+    if request.method == 'POST' and form.validate():      
         username = form.username.data
-       
-        
         password = form.password.data
-
         # Create cursor
         cur = mysql.connection.cursor()
-
         # Execute query
         try:
             cur.execute("INSERT INTO register(username, password, isfirstlogin) VALUES(%s, %s,%s)", (username, password,'y'))
@@ -271,18 +233,15 @@ def register():
         except:
             error = 'username already exists'
             return render_template('register.html', error=error,form=form)
-
         # Commit to DB
-        
-
         # Close connection
         cur.close()
-
         flash('You are now registered and can log in', 'success')
-
         # return render_template('register.html')
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
+
+
 
 @app.route('/dashboard')
 def dashboard():
@@ -298,26 +257,20 @@ def login():
         # Get Form Fields
         username = request.form['username']
         password_candidate = request.form['password']
-        cur = mysql.connection.cursor()
-        
+        cur = mysql.connection.cursor()      
         if username=="admin" and password_candidate=="admin":
             session['admin_logged_in'] = True
             session['username'] = username
             session['logged_in'] = False
             return redirect(url_for('dashboard'))
         # Create cursor
-       
-
         # Get user by username
         result = cur.execute("SELECT * FROM register WHERE username = %s", [username])
-
         if result > 0:
             # Get stored hash
-            
             data = cur.fetchone()
             password = data['password']
             firstlogin=data['isfirstlogin']
-            
             # Compare Passwords
             if password_candidate==password:
                 # Passed
@@ -327,11 +280,9 @@ def login():
                     no="y"
                     cur.execute("UPDATE register set isfirstlogin = %s WHERE username=%s",(no,username))
                     mysql.connection.commit()
-                    
                     cur.execute("SELECT id FROM register WHERE username = %s", [username])
                     userid=cur.fetchone()
                     activeid=userid['id']
-
                     cur.close()
                     flash('You are now logged in.Please complete your profile', 'success')
                     return redirect(url_for('profile'))
@@ -353,25 +304,16 @@ def login():
     return render_template('login.html')
 
 @app.route('/quote_history', methods=['GET', 'POST'])
-def quote_history():
-   
+def quote_history():   
     global activeid
         # Get Form Fields
-       
     cur = mysql.connection.cursor()
     val=1
-
     x=cur.execute("SELECT deliverydate,gallons FROM quote where quoteid=%s",[activeid])
     data = cur.fetchall()
-        
     if(x==0):
         return render_template("quotehistory.html",val=0)
-   
     mysql.connection.commit()
-   
-    
-
-  
     cur.close()    
     
    
@@ -419,14 +361,10 @@ def logout():
 @app.route('/myprofile', methods=['GET', 'POST'])
 def myprofile():
    
-        # Get Form Fields
-       
+        # Get Form Fields       
     cur = mysql.connection.cursor()
-        
     cur.execute("SELECT * FROM profile where pid=%s",[activeid])
-
     data = cur.fetchall()
-    
     # print(data)
     mysql.connection.commit()
     cur.close()    
@@ -446,12 +384,8 @@ def admincustomerorders():
         # Get Form Fields
        
     cur = mysql.connection.cursor()
-        
     cur.execute("SELECT deliverydate,gallons FROM quote")
-
     data = cur.fetchall()
-    
-
     mysql.connection.commit()
     cur.close()    
     
