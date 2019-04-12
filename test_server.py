@@ -1,14 +1,15 @@
 
-from server import app
+from server import app,QuoteForm
 import unittest 
 from mock import Mock, patch
 from server import login
+from werkzeug import ImmutableMultiDict
+from flask import Flask, request
 
 
 
 class TestLoginMethods(unittest.TestCase):
-
-
+     
      def test_customerorders(self):
         tester=app.test_client(self)
         response = tester.get('/admin_customerorders', content_type='html/text')
@@ -45,7 +46,18 @@ class TestLoginMethods(unittest.TestCase):
             follow_redirects=True
         )
         self.assertIn(b'Welcome admin' , response.data)
-    
+     
+     def test_change_price(self):
+        
+        tester=app.test_client(self)
+
+        response = tester.post(
+            '/changeprice',
+            data=dict(price="21"),
+            follow_redirects=False
+        )
+        self.assertIn(b'The price is updated' , response.data)
+
      def test_incorrect_admin_login(self):
         
         
@@ -111,7 +123,7 @@ class TestLoginMethods(unittest.TestCase):
             follow_redirects=True
         )
         self.assertIn(b'Password does not match' , response.data)
-
+     
 
     # REGISTER
      def test_register(self):
@@ -125,16 +137,16 @@ class TestLoginMethods(unittest.TestCase):
         response = tester.get('/register', follow_redirects=True)
         self.assertTrue(b'Register',  response.data)
 #    needed
-     def test_correct_register(self):
+    #  def test_correct_register(self):
         
-        tester=app.test_client(self)
+    #     tester=app.test_client(self)
 
-        response = tester.post(
-            '/register',
-            data=dict(username="test3", password="test3",confirm="test3"),
-            follow_redirects=True
-        )
-        self.assertIn(b'You are now registered' , response.data)
+    #     response = tester.post(
+    #         '/register',
+    #         data=dict(username="test3", password="test3",confirm="test3"),
+    #         follow_redirects=True
+    #     )
+    #     self.assertIn(b'You are now registered' , response.data)
 
 
 
@@ -177,19 +189,27 @@ class TestLoginMethods(unittest.TestCase):
         response = tester.get('/profile', content_type='html/text')
         self.assertEqual(2, pid)
 
-         
+        
+    #  def test_data_injection(self):
+    #     tester=app.test_client(self)  
+    #     response = tester.get('/profile')
+        
+        
+    #     inject_data = {'Fullname':'qwe', 'Address1':'qwe','Address2':'ass','city':'hous','State':'TX', 'zipcode':'77054'}
+    #     response = response.post(tester, data=inject_data)
+    #     assert 'Your profile is created now' in response.data
     # Ensure that posts show up on the main page
      def test_correct_profile(self):
          tester=app.test_client(self)  
          
-
+         pid=150
          response = tester.post(
              '/profile',
-             data=dict(Fullname="qwe", Address1="qwe",Address2='ass',city="hous",State="TX", zipcode="77054"),
+             data=dict(fullname="qwe", address1="qwe",address2='ass',city="hous",state="TX", zipcode="77054"),
              follow_redirects=True        
          )
-         response = tester.get('/dashboard', content_type='html/text')
-         self.assertIn(b'Dashboard' , response.data)
+        #  response = tester.get('/dashboard', content_type='html/text')
+         self.assertIn(b'Your profile is created now' , response.data)
      def test_incorrect_profile(self):
         
          tester=app.test_client(self)
@@ -222,7 +242,7 @@ class TestLoginMethods(unittest.TestCase):
      def test_logout(self):
         tester=app.test_client(self)
         response = tester.get('/logout', follow_redirects=True)
-        self.assertTrue(b'You are now logged out',  response.data)  
+        self.assertIn(b'Login',  response.data)  
 
 # QUOTE
      def test_quote(self):
@@ -230,6 +250,45 @@ class TestLoginMethods(unittest.TestCase):
         response = tester.get('/quote', content_type='html/text')
         self.assertEqual(response.status_code, 200)
     #login page loads correctly
+     
+     def test_quote_two(self):
+        tester=app.test_client(self)    
+        response = tester.post(
+        '/quote',
+        data=dict(gallons="10",deliverydate="05/12/2019"),
+        follow_redirects=True
+        )
+        self.assertIn(b'Your order is placed' , response.data)
+            
+    #  def test_sample_form_validate(self):
+    #     tester=app.test_client(self)
+
+    #     abc = Flask(__name__)
+    #     form = QuoteForm(request.form)
+    #     response = tester.post(
+    #          '/quote',
+    #          data=dict(gallons="10",deliverydate="05/12/2019"),
+    #          follow_redirects=True
+    #             )
+    #     if request.form['submit button']=='place order':
+    #         self.assertIn(b'Your order is placed' , response.data)
+
+    #     # with app.test_request_context('/quote'):
+    #     #     request.form = ImmutableMultiDict([('btn', 'place order')])
+    #         # response = tester.post(
+    #         #  '/quote',
+    #         #  data=dict(gallons="10",deliverydate="05/12/2019"),
+    #         #  follow_redirects=True
+    #         #     )
+    #         # self.assertIn(b'Your order is placed' , response.data) # Prints 'Saving...'
+    #         request.form = ImmutableMultiDict([('btn', 'get price')])
+    #         response = tester.post(
+    #          '/quote',
+    #          data=dict(gallons="10",deliverydate="05/12/2019"),
+    #          follow_redirects=True
+    #             )
+    #         self.assertIn(b'Price per gallon' , response.data) # Prints 'Updating
+
      def test_quote_required(self):
         tester=app.test_client(self)  
         response = tester.get('/quote', follow_redirects=True)
@@ -245,6 +304,18 @@ class TestLoginMethods(unittest.TestCase):
              follow_redirects=True
          )
          self.assertIn(b'Price per gallon' , response.data)
+    
+     def test_price_quote(self):
+        
+         tester=app.test_client(self)
+
+         response = tester.post(
+             '/quote',
+             data=dict(gallons="10",deliverydate="04/10/2019"),
+             follow_redirects=False
+         )
+         self.assertIn(b'Quote' , response.data) 
+         
      def test_correct_quote(self):
         
         tester=app.test_client(self) 

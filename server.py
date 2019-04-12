@@ -118,7 +118,7 @@ def quote():
         gallons = form.gallons.data
         
         quoteid=activeid
-        
+        print("hello")
         deladdress=''
         price=''
         cur.execute("SELECT * FROM profile WHERE pid = %s", [activeid])
