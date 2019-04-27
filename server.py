@@ -66,7 +66,7 @@ class ProfileForm(Form):
     city = StringField('city', [validators.DataRequired(),validators.Length(max=100)])
     state = SelectField(u'State', choices = [('TX', 'TX'), 
       ('CA', 'CA')])
-    zipcode = IntegerField('zipcode', [validators.DataRequired(),validators.NumberRange(min=10000,max=999999999,message="zipcode should be 5 to 9 characters")])
+    zipcode = IntegerField('zipcode', [validators.NumberRange(min=10000,max=999999999,message="zipcode should be 5 to 9 characters")])
 
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
@@ -102,8 +102,7 @@ def profile():
 
 class QuoteForm(Form):
   
-    gallons = IntegerField('gallons', [validators.DataRequired()],description='number required')
-  
+    gallons = IntegerField('gallons', [validators.NumberRange(min=1,max=9999999999999,message="Enter a number")])
     deliverydate = DateField('deliverydate', format='%Y-%m-%d')
    
    
