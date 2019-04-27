@@ -5,7 +5,8 @@ from mock import Mock, patch
 from server import login
 from werkzeug import ImmutableMultiDict
 from flask import Flask, request
-
+import pytest
+from server import pricing_module,QuoteForm
 
 
 class TestLoginMethods(unittest.TestCase):
@@ -185,9 +186,9 @@ class TestLoginMethods(unittest.TestCase):
    
      def test_profile_asser(self):
         tester=app.test_client(self) 
-        pid=2 
+        pid1=2 
         response = tester.get('/profile', content_type='html/text')
-        self.assertEqual(2, pid)
+        self.assertEqual(2, pid1)
 
         
     #  def test_data_injection(self):
@@ -249,16 +250,24 @@ class TestLoginMethods(unittest.TestCase):
         tester=app.test_client(self)
         response = tester.get('/quote', content_type='html/text')
         self.assertEqual(response.status_code, 200)
+     def test_pricing_module(self):
+        assert pricing_module("TX",1,900,6,1) == 0.09
+     def test_pricing_module2(self):
+        # print(pricing_module("CA",0,2000,5,1))
+        assert pricing_module("TX",0,2000,5,1) == 0.08
+     
+    # def test_pricing_module(self):
+    #     tester=app.test_client(self)
     #login page loads correctly
      
-     def test_quote_two(self):
-        tester=app.test_client(self)    
-        response = tester.post(
-        '/quote',
-        data=dict(gallons="10",deliverydate="05/12/2019"),
-        follow_redirects=True
-        )
-        self.assertIn(b'Your order is placed' , response.data)
+    #  def test_quote_two(self):
+    #     tester=app.test_client(self)    
+    #     response = tester.post(
+    #     '/quote',
+    #     data=dict(gallons="10",deliverydate="05/12/2019"),
+    #     follow_redirects=True
+    #     )
+    #     self.assertIn(b'Your order is placed' , response.data)
             
     #  def test_sample_form_validate(self):
     #     tester=app.test_client(self)

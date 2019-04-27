@@ -22,6 +22,7 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 mysql = MySQL(app)
 deladdress=''
 price=''
+totalamount=''
 
 class ChangePrice(Form):
   
@@ -112,25 +113,24 @@ def quote():
     global activeid
     global deladdress
     global price
+    global totalamount
     form = QuoteForm(request.form)
     if request.method == 'POST' and form.validate() and request.form['submit button']=='place order':
         cur = mysql.connection.cursor()
         gallons = form.gallons.data
         
         quoteid=activeid
-        print("hello")
         deladdress=''
-        price=''
         cur.execute("SELECT * FROM profile WHERE pid = %s", [activeid])
         data = cur.fetchone()
         add1 = data['address1']
         add2=data['address2']
         deladdress= add1+add2        
-        price=str(10)
+        
         deliverydate= form.deliverydate.data        
         # Create cursor
         # Execute query
-        cur.execute("INSERT INTO quote( quoteid,gallons, deliverydate) VALUES(%s, %s,%s)", (quoteid,gallons,deliverydate))
+        cur.execute("INSERT INTO quote( quoteid,gallons, deliverydate,price,totalamount) VALUES(%s, %s,%s,%s,%s)", (quoteid,gallons,deliverydate,price,totalamount))
         # Commit to DB
         mysql.connection.commit()
         # Close connection
@@ -156,40 +156,41 @@ def quote():
         add2=data['address2']
         cur.execute("SELECT state FROM profile WHERE pid = %s", [activeid])
         loc = cur.fetchone()        
-        if loc['state']=="texas":
-            location=0.02
-        else:
-            location=0.04
-        print(location)
+        # if loc['state']=="texas":
+        #     location=0.02
+        # else:
+        #     location=0.04
+        # print(location)
         his=cur.execute("SELECT * FROM quote WHERE quoteid = %s", [activeid])        
-        if his>0:
-            rate_history_factor=0.01
-        else:
-            rate_history_factor=0
-        print(rate_history_factor)
-        if gallons>1000:
-            gallons_requested_factor=0.02
-        else:
-            gallons_requested_factor=0.03
-        print(deliverydate.month)
-        if (deliverydate.month)==6 or (deliverydate.month)==7 or (deliverydate.month)==8:
-            rate_fluctuation=0.04
-        else:
-            rate_fluctuation=0.03
-        print(rate_fluctuation)
+        # if his>0:
+        #     rate_history_factor=0.01
+        # else:
+        #     rate_history_factor=0
+        # print(rate_history_factor)
+        # if gallons>1000:
+        #     gallons_requested_factor=0.02
+        # else:
+        #     gallons_requested_factor=0.03
+        # print(deliverydate.month)
+        # if (deliverydate.month)==6 or (deliverydate.month)==7 or (deliverydate.month)==8:
+        #     rate_fluctuation=0.04
+        # else:
+        #     rate_fluctuation=0.03
+        # print(rate_fluctuation)
         # print(deliverydate.month)
         deladdress= add1+add2
         cur.execute("SELECT price FROM price where price_id=%s",('1'))
         current= cur.fetchone()
         current_price=current['price']
-        print(current_price)       
+        #print(current_price)       
         # current_price=1.50
-        margin=current_price*(location-rate_history_factor+gallons_requested_factor+0.01+rate_fluctuation)
-        price=current_price+margin
+        #margin=current_price*(location-rate_history_factor+gallons_requested_factor+0.01+rate_fluctuation)
+        price=current_price+pricing_module(loc['state'],his,gallons,deliverydate.month,current_price)
         totalamount=float(gallons)*price               
         # Create cursor
         # Execute query
         # Commit to DB
+        
         mysql.connection.commit()
         # Close connection
         cur.close()
@@ -197,6 +198,25 @@ def quote():
         return render_template('quote.html', form=form,result=deladdress,price=price,amount=totalamount)
     return render_template('quote.html',form=form,result=deladdress)
 
+def pricing_module(location,history,gallons,deliverymonth,current_price):
+    if location=="TX":
+        loc=0.02
+    else:
+        loc=0.04
+    if history>0:
+        rate_history_factor=0.01
+    else:
+        rate_history_factor=0
+    if gallons>1000:
+        gallons_requested_factor=0.02
+    else:
+        gallons_requested_factor=0.03
+    if (deliverymonth)==6 or (deliverymonth)==7 or (deliverymonth)==8:
+        rate_fluctuation=0.04
+    else:
+        rate_fluctuation=0.03
+    margin=current_price*(loc-rate_history_factor+gallons_requested_factor+0.01+rate_fluctuation)
+    return margin
 
     # cur = mysql.connection.cursor()
     # cur.execute("select * from profile where pid=%s",[activeid])
@@ -309,7 +329,7 @@ def quote_history():
         # Get Form Fields
     cur = mysql.connection.cursor()
     val=1
-    x=cur.execute("SELECT deliverydate,gallons FROM quote where quoteid=%s",[activeid])
+    x=cur.execute("SELECT deliverydate,gallons,price,totalamount FROM quote where quoteid=%s",[activeid])
     data = cur.fetchall()
     if(x==0):
         return render_template("quotehistory.html",val=0)
@@ -348,8 +368,7 @@ def is_logged_in(f):
     return wrap
 
 
-def pricing_module(factors):
-    return price
+
 
 @app.route('/logout')
 @is_logged_in
@@ -384,7 +403,7 @@ def admincustomerorders():
         # Get Form Fields
        
     cur = mysql.connection.cursor()
-    cur.execute("SELECT deliverydate,gallons FROM quote")
+    cur.execute("SELECT  register.username,quote.deliverydate, quote.gallons,quote.price,quote.totalamount FROM quote INNER JOIN register ON quote.quoteid=register.id")
     data = cur.fetchall()
     mysql.connection.commit()
     cur.close()    
@@ -398,4 +417,4 @@ def admincustomerorders():
 if __name__ == '__main__':
 
     app.secret_key='secret123'
-    app.run(debug=True)
+    app.run(threaded=True)
