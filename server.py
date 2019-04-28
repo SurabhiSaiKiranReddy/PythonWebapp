@@ -27,8 +27,7 @@ totalamount=''
 class ChangePrice(Form):
   
     price = DecimalField('price',places=2)
-   
-    
+  
     
 
 @app.route('/changeprice', methods=['GET', 'POST'])
@@ -279,6 +278,10 @@ def dashboard():
     return render_template('dashboard.html')
 
 # User login
+@app.route('/', methods=['GET', 'POST'])
+def main1():
+    return redirect(url_for('login'))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     global activeid
