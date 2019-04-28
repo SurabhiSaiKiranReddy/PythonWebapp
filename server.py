@@ -432,4 +432,4 @@ if __name__ == '__main__':
 
     app.secret_key='secret123'
     # app.run(threaded=True)
-    app.run(host='0.0.0.0',posrt=80,threaded=True)
+    app.run(host='0.0.0.0',port=80,threaded=True)
