@@ -64,8 +64,7 @@ class ProfileForm(Form):
     address1 = TextAreaField("Address1",[validators.DataRequired(),validators.Length(max=100)])
     address2 = TextAreaField("Address2",[validators.Length(max=100)])
     city = StringField('city', [validators.DataRequired(),validators.Length(max=100)])
-    state = SelectField(u'State', choices = [('TX', 'TX'), 
-      ('CA', 'CA')])
+    state = SelectField(u'State', choices = [('AL','AL'),('AK','AK'),('AZ','AZ'),('AR','AR'),('CA','CA'),('CO','CO'),('CT','CT'),('DE','DE'),('DC','DC'),('FL','FL'),('GA','GA'),('HI','HI'),('ID','ID'),('IL','IL'),('IN','IN'),('IA','IA'),('KS','KS'),('KY','KY'),('LA','LA'),('ME','ME'),('MD','MD'),('MA','MA'),('MI','MI'),('MN','MN'),('MS','MS'),('MO','MO'),('MT','MT'),('NE','NE'),('NV','NV'),('NH','NH'),('NJ','NJ'),('NM','NM'),('NY','NY'),('NC','NC'),('ND','ND'),('OH','OH'),('OK','OK'),('OR','OR'),('PA','PA'),('RI','RI'),('SC','SC'),('SD','SD'),('TN','TN'),('TX','TX'),('UT','UT'),('VT','VT'),('VA','VA'),('WA','WA'),('WV','WV'),('WI','WI'),('WY','WY'),])
     zipcode = IntegerField('zipcode', [validators.NumberRange(min=10000,max=999999999,message="zipcode should be 5 to 9 characters")])
 
 @app.route('/profile', methods=['GET', 'POST'])
@@ -129,6 +128,16 @@ def quote():
         deliverydate= form.deliverydate.data        
         # Create cursor
         # Execute query
+        cur.execute("SELECT state FROM profile WHERE pid = %s", [activeid])
+        loc = cur.fetchone() 
+        his=cur.execute("SELECT * FROM quote WHERE quoteid = %s", [activeid]) 
+        cur.execute("SELECT price FROM price where price_id=%s",('1'))
+        current= cur.fetchone()
+        current_price=current['price']
+        #print(current_price)         
+        price=current_price+pricing_module(loc['state'],his,gallons,deliverydate.month,current_price)
+        totalamount=float(gallons)*price   
+
         cur.execute("INSERT INTO quote( quoteid,gallons, deliverydate,price,totalamount) VALUES(%s, %s,%s,%s,%s)", (quoteid,gallons,deliverydate,price,totalamount))
         # Commit to DB
         mysql.connection.commit()
@@ -154,7 +163,10 @@ def quote():
         add1 = data['address1']
         add2=data['address2']
         cur.execute("SELECT state FROM profile WHERE pid = %s", [activeid])
-        loc = cur.fetchone()        
+        loc = cur.fetchone() 
+        cur.execute("SELECT price FROM price where price_id=%s",('1'))
+        current= cur.fetchone()
+        current_price=current['price']       
         # if loc['state']=="texas":
         #     location=0.02
         # else:
@@ -214,7 +226,7 @@ def pricing_module(location,history,gallons,deliverymonth,current_price):
         rate_fluctuation=0.04
     else:
         rate_fluctuation=0.03
-    margin=current_price*(loc-rate_history_factor+gallons_requested_factor+0.01+rate_fluctuation)
+    margin=current_price*(loc-rate_history_factor+gallons_requested_factor+0.1+rate_fluctuation)
     return margin
 
     # cur = mysql.connection.cursor()
