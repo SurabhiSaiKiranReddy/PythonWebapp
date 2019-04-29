@@ -111,6 +111,7 @@ def quote():
     global deladdress
     global price
     global totalamount
+    deladdress=''
     form = QuoteForm(request.form)
     if request.method == 'POST' and form.validate() and request.form['submit button']=='place order':
         cur = mysql.connection.cursor()
